@@ -1,1 +1,45 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>初始化</title></head><body>init</body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>我的世界礼包大转盘</title>
+<style>html,body{margin:0;height:100%;background:#0b1220;color:#9aa8c2;font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center}.box{text-align:center;padding:24px}#st{opacity:.9}#spin{width:26px;height:26px;margin:0 auto 14px;border:2px solid rgba(255,255,255,.18);border-top-color:#5ac8fa;border-radius:50%;animation:sp .9s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}</style>
+</head>
+<body>
+<div class="box"><div id="spin"></div><div id="st">加载中…</div></div>
+<script>
+(function(){
+  var V='v1', PARTS=['p1.txt','p2.txt','p3.txt'];
+  function fail(msg){var s=document.getElementById('st');var p=document.getElementById('spin');if(p){p.style.display='none';}if(s){s.textContent=msg;}}
+  function fetchText(u){return fetch(u+'?t='+V).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();});}
+  function inflate(u8){
+    if(typeof DecompressionStream==='function'){
+      try{
+        return new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      }catch(e){}
+    }
+    return new Promise(function(res,rej){
+      if(window.pako&&window.pako.inflate){try{res(pako.inflate(u8,{to:'string'}));}catch(e){rej(e);}return;}
+      var s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js';
+      s.onload=function(){try{res(pako.inflate(u8,{to:'string'}));}catch(e){rej(e);}};
+      s.onerror=function(){rej(new Error('decompress unavailable'));};
+      document.head.appendChild(s);
+    });
+  }
+  Promise.all(PARTS.map(fetchText)).then(function(t){
+    var b64=t.join('').replace(/[^A-Za-z0-9+/=]/g,'');
+    var bin=atob(b64), n=bin.length, u8=new Uint8Array(n), i;
+    for(i=0;i<n;i++){u8[i]=bin.charCodeAt(i);}
+    return inflate(u8);
+  }).then(function(html){
+    document.open();document.write(html);document.close();
+  }).catch(function(err){
+    fail('加载失败，请刷新重试');
+    if(window.console&&console.warn){console.warn(err);}
+  });
+})();
+</script>
+</body>
+</html>
