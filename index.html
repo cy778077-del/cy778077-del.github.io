@@ -11,6 +11,7 @@
 <script>
 (function(){
   var V='v1', PARTS=['p1.txt','p2.txt','p3.txt'];
+  var FIXIDX=6053, FIXCH='2';
   function fail(msg){var s=document.getElementById('st');var p=document.getElementById('spin');if(p){p.style.display='none';}if(s){s.textContent=msg;}}
   function fetchText(u){return fetch(u+'?t='+V).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();});}
   function inflate(u8){
@@ -30,6 +31,7 @@
   }
   Promise.all(PARTS.map(fetchText)).then(function(t){
     var b64=t.join('').replace(/[^A-Za-z0-9+/=]/g,'');
+    b64=b64.slice(0,FIXIDX)+FIXCH+b64.slice(FIXIDX+1);
     var bin=atob(b64), n=bin.length, u8=new Uint8Array(n), i;
     for(i=0;i<n;i++){u8[i]=bin.charCodeAt(i);}
     return inflate(u8);
